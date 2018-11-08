@@ -1,4 +1,6 @@
 
 .DS_Store
-
+\vendor
 \.vscode/settings\.json
+composer.json
+composer.lock
