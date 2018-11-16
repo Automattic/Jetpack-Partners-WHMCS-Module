@@ -4,7 +4,7 @@
  * Plans
  */
 
-namespace JetpackPartner;
+#namespace JetpackPartner;
 
 /**
  * Used to interact with the Jetpack Partner API for provisioning and cancelling Jetpack plans as
