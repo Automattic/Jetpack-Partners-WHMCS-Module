@@ -1,9 +1,14 @@
 <?php
-
-include_once __DIR__ . '/AdminController.php';
-
 /**
  * Dispatch handler for Jetpack admin pages
+ */
+
+namespace Jetpack;
+
+use Jetpack\AdminController;
+
+/**
+ * Dispatcher class for handling incoming requests for the addon module
  */
 class AdminDispatcher {
 	/**

@@ -4,9 +4,9 @@
  * a product group.
  */
 
+require_once __DIR__ . '/vendor/autoload.php';
 use WHMCS\Database\Capsule;
-require_once __DIR__ . '/lib/Admin/AdminDispatcher.php';
-
+use Jetpack\AdminDispatcher;
 
 
 if ( ! defined( 'WHMCS' ) ) {
@@ -25,14 +25,14 @@ function jetpack_config() {
 		'description' => 'Setups the Jetpack By Automattic Partner Module for Provisioning Jetpack',
 		'version'     => '0.0.1',
 		'fields'      => [
-			'Partner Id'     => array(
+			'partner_id'     => array(
 				'FriendlyName' => 'Jetpack Partner Client Id',
 				'Type'         => 'text',
 				'Size'         => '64',
 				'Default'      => '',
 				'Description'  => 'Jetpack Partner Client Id',
 			),
-			'Partner Secret' => array(
+			'partner_secret' => array(
 				'FriendlyName' => 'Jetpack Partner Client Secret',
 				'Type'         => 'text',
 				'Size'         => '256',

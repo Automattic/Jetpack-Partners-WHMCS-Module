@@ -1,5 +1,13 @@
 <?php
+/**
+ * Controller class for handling output displayed to the partners on the Jetpack Addon module page.
+ * Accepts incoming requests from the dispatcher, handles request and creates HTML output for the
+ * corresponding request page.
+ */
+
 use WHMCS\Database\Capsule;
+
+namespace Jetpack;
 
 /**
  * Controller for handling admin requests.
@@ -12,9 +20,10 @@ class AdminController {
 	 * @return mixed action to perform or error string for invalid action
 	 */
 	public function index( $params ) {
+		$menu = $this->jetpack_menu();
 		$modulelink = $params['modulelink'];
 		$output     = '<h2> Module Status </h2>';
-		if ( empty( $params['Partner Id'] ) || empty( $params['Partner Secret'] ) ) {
+		if ( empty( $params['partner_id'] ) || empty( $params['partner_secret'] ) ) {
 			$output .= ' Module Incorrectly Configured. Please configure the module
 			with a Partner Id and Partner Secret';
 		} else {
@@ -22,7 +31,7 @@ class AdminController {
 			<p>
 			Module configured correctly</strong></p>
 			<p>
-				<a href=\"$modulelink\" class=\"btn btn-default\">
+				<a href=\"$modulelink&action=validate_partner_credentials\" class=\"btn btn-default\">
 					Validate Partner Id/Secret
 				</a>
 
@@ -31,7 +40,7 @@ class AdminController {
 				</a>
 			</p>";
 		}
-		return $output;
+		return $menu . $output;
 	}
 
 	/**
@@ -42,7 +51,7 @@ class AdminController {
 	 * @return string $output HTML output for the add product page
 	 */
 	public function add_product( $params ) {
-		$post_data  = [
+		$post_data = [
 			'type'   => 'other',
 			'gid'    => '1',
 			'name'   => 'Jetpack By Automattic',
@@ -85,5 +94,4 @@ class AdminController {
 		$output = 'Product ' . $post_data['name'] . ' Successfully added.';
 		return $output;
 	}
-
 }

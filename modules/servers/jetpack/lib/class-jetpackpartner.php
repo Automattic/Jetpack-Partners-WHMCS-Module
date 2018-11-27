@@ -3,8 +3,7 @@
  * A utility library for making calls to the Jetpack Partner API to provision and cancel Jetpack
  * Plans
  */
-
-#namespace JetpackPartner;
+namespace JetpackPartner;
 
 /**
  * Used to interact with the Jetpack Partner API for provisioning and cancelling Jetpack plans as
