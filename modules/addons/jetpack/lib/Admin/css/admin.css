@@ -1,0 +1,21 @@
+.jetpack-nav {
+	width: 100%;
+	background-color: #555;
+	overflow: auto;
+	margin-bottom: 15px;
+}
+
+.jetpack-nav a {
+	float: left;
+	padding: 15px;
+	color: white;
+	font-size: 17px;
+	width: 50%;
+	text-align: center;
+}
+
+.jetpack-nav a.active {
+	background-color: #4CAF50;
+}
+
+

@@ -9,7 +9,8 @@
 namespace Jetpack;
 
 use WHMCS\Database\Capsule;
-
+require_once __DIR__ . '/../../../../servers/jetpack/lib/class-jetpackpartner.php';
+use JetpackPartner\JetpackPartner;
 
 /**
  * Controller for handling admin requests.
@@ -24,6 +25,25 @@ class AdminController {
 	public function index( $params ) {
 		$menu       = $this->jetpack_menu( $params );
 		$modulelink = $params['modulelink'];
+		$outut      = '';
+
+		if ( ! $params['partner_id'] || ! $params['partner_secret'] ) {
+			$output .= <<<HTML
+			Module Incorrectly Configured. Missing Partner ID or Partner Secret.
+			<a href="/admin/configaddonmods.php"> Update Module configuration </a>
+
+HTML;
+		} else {
+			$output .= <<<HTML
+			<p>Module Activated on: </p>
+			<p>Partner ID: {$params['partner_id']}</p>
+			<p>Partner Secret: {$params['partner_secret']}</p>
+			<a href="{$modulelink}&action=validate_partner_credentials" class="btn btn-primary">
+				Validate Partner Credentials
+			</a>
+
+HTML;
+		}
 		return $menu . $output;
 	}
 
@@ -86,14 +106,26 @@ class AdminController {
 	 * @return bool True if there is an access token else false
 	 */
 	public function validate_partner_credentials( $params ) {
-		if ( ! $partner->access_token ) {
-			return false;
+		$partner = new JetpackPartner( $params['partner_id'], $params['partner_secret'] );
+		if ( $partner->access_token ) {
+			$output .= <<<HTML
+			<p>Your Partner Id and Secret are correct and can be used to provision Jetpack Plans.</p>
+HTML;
+		} else {
+			$output .= <<<HTML
+			<p>Module Incorrectly Configured. Your Partner ID or Secret is not valid.
+			<a href="/admin/configaddonmods.php"> Update Module configuration </a>
+			</p>
+
+HTML;
 		}
+		return $this->index( $params ) . $output;
 	}
 
 	/**
-	 * Undocumented function
+	 * Main Menu for Jetpack Addon Module
 	 *
+	 * @param array $params Module parameters.
 	 * @return string $output HTML output for the add product page
 	 */
 	public function jetpack_menu( $params ) {
@@ -106,7 +138,6 @@ class AdminController {
 			<a class="active" href={$modulelink}>Module Status</a>
 			<a href="{$modulelink}&action=add_product">Manage Jetpack Products</a>
 			</div>
-
 			</body>
 			</html>
 HTML;
