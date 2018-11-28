@@ -5,9 +5,11 @@
  * corresponding request page.
  */
 
-use WHMCS\Database\Capsule;
 
 namespace Jetpack;
+
+use WHMCS\Database\Capsule;
+
 
 /**
  * Controller for handling admin requests.
@@ -20,26 +22,8 @@ class AdminController {
 	 * @return mixed action to perform or error string for invalid action
 	 */
 	public function index( $params ) {
-		$menu = $this->jetpack_menu();
+		$menu       = $this->jetpack_menu( $params );
 		$modulelink = $params['modulelink'];
-		$output     = '<h2> Module Status </h2>';
-		if ( empty( $params['partner_id'] ) || empty( $params['partner_secret'] ) ) {
-			$output .= ' Module Incorrectly Configured. Please configure the module
-			with a Partner Id and Partner Secret';
-		} else {
-			$output .= "
-			<p>
-			Module configured correctly</strong></p>
-			<p>
-				<a href=\"$modulelink&action=validate_partner_credentials\" class=\"btn btn-default\">
-					Validate Partner Id/Secret
-				</a>
-
-				<a href=\"$modulelink&action=add_product\" class=\"btn btn-default\">
-					Create a Jetpack Product
-				</a>
-			</p>";
-		}
 		return $menu . $output;
 	}
 
@@ -93,5 +77,38 @@ class AdminController {
 		}
 		$output = 'Product ' . $post_data['name'] . ' Successfully added.';
 		return $output;
+	}
+
+	/**
+	 * Validate a partners id and secret entered when they configured the addon module.
+	 *
+	 * @param array $params Module Parameters.
+	 * @return bool True if there is an access token else false
+	 */
+	public function validate_partner_credentials( $params ) {
+		if ( ! $partner->access_token ) {
+			return false;
+		}
+	}
+
+	/**
+	 * Undocumented function
+	 *
+	 * @return string $output HTML output for the add product page
+	 */
+	public function jetpack_menu( $params ) {
+		$modulelink = $params['modulelink'];
+		return <<<HTML
+			<html>
+			<link rel="stylesheet" type="text/css" href="/modules/addons/jetpack/lib/admin/css/admin.css"/>
+			<body>
+			<div class="jetpack-nav">
+			<a class="active" href={$modulelink}>Module Status</a>
+			<a href="{$modulelink}&action=add_product">Manage Jetpack Products</a>
+			</div>
+
+			</body>
+			</html>
+HTML;
 	}
 }
