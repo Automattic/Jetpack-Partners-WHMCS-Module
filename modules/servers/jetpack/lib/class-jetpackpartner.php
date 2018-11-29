@@ -61,8 +61,8 @@ class JetpackPartner {
 	 * @param string  $site_url Site URL that is being provisioned or cancelled.
 	 */
 	public function __construct( int $client_id, string $client_secret, string $site_url = null ) {
-		$this->client_id     = $client_id;
-		$this->client_secret = $client_secret;
+		$this->client_id     = trim( $client_id );
+		$this->client_secret = trim( $client_secret );
 		$this->access_token  = $this->get_partner_access_token();
 		$this->site_url      = $site_url;
 	}
