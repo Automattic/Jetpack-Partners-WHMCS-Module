@@ -50,7 +50,7 @@ function jetpack_config() {
  * @return void
  */
 function jetpack_activate() {
-	$this->jetpack_deactivate();
+	jetpack_deactivate();
 	if ( ! Capsule::schema()->hasTable( 'jetpack_products' ) ) {
 		Capsule::schema()->create(
 			'jetpack_products',

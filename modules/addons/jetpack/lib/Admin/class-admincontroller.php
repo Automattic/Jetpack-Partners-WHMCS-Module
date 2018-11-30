@@ -16,6 +16,19 @@ use JetpackPartner\JetpackPartner;
  * Controller for handling admin requests.
  */
 class AdminController {
+
+	/**
+	 * Undocumented variable
+	 *
+	 * @var array
+	 */
+	public $jetpack_plans = [
+		'Free',
+		'Personal',
+		'Premium',
+		'Professional',
+	];
+
 	/**
 	 * Undocumented function
 	 *
@@ -48,6 +61,103 @@ HTML;
 	}
 
 	/**
+	 * Manage Jetpack Products
+	 *
+	 * @param [type] $params
+	 * @return void
+	 */
+	public function manage_product( $params ) {
+		$menu             = $this->jetpack_menu( $params );
+		$product_groups   = Capsule::table( 'tblproductgroups' )->get();
+		$jetpack_products = Capsule::table( 'jetpack_products' )->lists( 'product_id' );
+		$modulelink       = $params['modulelink'];
+
+		$output = '';
+		if ( ! $product_groups ) {
+			$output .= <<<HTML
+			No Product Groups Found. Please <a href="/admin/configproducts.php?action=creategroup">
+			create a product group before adding a product </a>'
+HTML;
+			return $menu . $output;
+		}
+
+		if ( ! $jetpack_products ) {
+			$output               .= <<<HTML
+			You Do not currently have any Jetpack products set up. Which product group
+			would you like to create the Jetpack Products under
+HTML;
+			$product_group_options = '';
+			foreach ( $product_groups as $product_group ) {
+				$product_group_options .=
+				"<option value=\"$product_group->id\">$product_group->name</option>";
+			}
+			$output .= <<<HTML
+				<form action="{$modulelink}&action=add_product" method="post">
+				<select name="product_group_id">
+					{$product_group_options}
+				</select><br>
+				<input type="submit" value="Submit">
+				</form>
+HTML;
+		} else {
+			$products = Capsule::table( 'tblproducts' )
+			->whereIn( 'id', $jetpack_products )
+			->get( [ 'name', 'id' ] );
+			$bundles  = Capsule::table( 'tblbundles' )->get();
+
+			foreach ( $products as $product ) {
+				$product_table_rows .=
+				"<tr><td>$product->name</td><td>0</td></tr>";
+				$product_select     .=
+				"<option value=\"$product->id\">$product->name</option>";
+			}
+			$output .= <<<HTML
+			<table border="1">
+			<tbody>
+			<tr><th>Product Name</th><th>Licenses Provisioned</th></tr>
+			{$product_table_rows}
+			</tbody>
+			</table>
+			<br>
+HTML;
+		}
+
+		if ( ! empty( $bundles ) ) {
+			foreach ( $bundles as $bundle ) {
+				$bundle_select .=
+				"<option value=\"$bundle->id\">$bundle->name</option>";
+			}
+
+			$output .= <<< HTML
+			Add Product To Bundle
+			<form action="{$modulelink}&action=add_product" method="post">
+				<select name="product_group_id">
+					{$product_select}
+				</select>
+				<select name="product_group_id">
+					{$bundle_select}
+				</select>
+				<input type="submit" value="Submit">
+			</form>
+			<br>
+			<a href="/admin/configbundles.php" class="btn btn-primary">
+				Manage Bundles
+			</a>
+HTML;
+		} else {
+			$output .= <<<HTML
+			You have no bundles created <br>
+
+			<a href="/admin/configbundles.php" class="btn btn-primary">
+				Manage Bundles
+			</a>
+HTML;
+		}
+
+		return $menu . $output;
+	}
+
+	/**
 	 * Add a Jetpack Product with required configurations fields to a hosting partners whmcs product
 	 * list.
 	 *
@@ -55,46 +165,61 @@ HTML;
 	 * @return string $output HTML output for the add product page
 	 */
 	public function add_product( $params ) {
-		$post_data = [
-			'type'   => 'other',
-			'gid'    => '1',
-			'name'   => 'Jetpack By Automattic',
-			'module' => 'jetpack',
-		];
+		foreach ( $this->jetpack_plans as $plan ) {
+			$post_data = [
+				'type'   => 'other',
+				'gid'    => $_POST['product_group_id'],
+				'name'   => 'Jetpack - ' . $plan . ' Plan',
+				'module' => 'jetpack',
+			];
 
-		$product_id = localAPI( 'AddProduct', $post_data );
+			$product_id = localAPI( 'AddProduct', $post_data );
 
-		$custom_fields = [
-			[
-				'field_name'    => 'Site URL',
-				'field_type'    => 'text',
-				'field_options' => '',
-			],
-			[
-				'field_name'    => 'Local User',
-				'field_type'    => 'text',
-				'field_options' => '',
-			],
-			[
-				'field_name'    => 'Plan',
-				'field_type'    => 'dropdown',
-				'field_options' => 'Free,Personal,Premium,Professional',
-			],
-		];
-
-		foreach ( $custom_fields as $field ) {
-			Capsule::table( 'tblcustomfields' )->insert(
+			Capsule::table( 'jetpack_products' )->insert(
 				[
-					'type'         => 'product',
-					'relid'        => $product_id['pid'],
-					'fieldname'    => $field['field_name'],
-					'fieldtype'    => $field['field_type'],
-					'fieldoptions' => ! empty( $field['field_options'] ? $field['field_options'] : '' ),
-					'required'     => 'on',
-					'showorder'    => 'on',
+					'product_id' => $product_id['pid'],
+					'plan_type'  => $plan,
+					'created_at' => date( 'Y-m-d-H:i:s' ),
+					'updated_at' => date( 'Y-m-d-H:i:s' ),
 				]
 			);
+
+			$custom_fields = [
+				[
+					'field_name'    => 'Site URL',
+					'field_type'    => 'text',
+					'description'   => 'The site url the Jetpack plan will be provisioned for',
+					'field_options' => '',
+				],
+				[
+					'field_name'    => 'Local User',
+					'field_type'    => 'text',
+					'description'   => 'The blog user for the site',
+					'field_options' => '',
+				],
+				[
+					'field_name'    => 'Plan',
+					'field_type'    => 'text',
+					'description'   => 'The type of plan to provision',
+					'field_options' => '',
+				],
+			];
+
+			foreach ( $custom_fields as $field ) {
+				Capsule::table( 'tblcustomfields' )->insert(
+					[
+						'type'         => 'product',
+						'relid'        => $product_id['pid'],
+						'fieldname'    => $field['field_name'],
+						'fieldtype'    => $field['field_type'],
+						'fieldoptions' => $field['field_options'],
+						'required'     => 'on',
+						'showorder'    => 'off',
+					]
+				);
+			}
 		}
+
 		$output = 'Product ' . $post_data['name'] . ' Successfully added.';
 		return $output;
 	}
@@ -135,11 +260,34 @@ HTML;
 			<link rel="stylesheet" type="text/css" href="/modules/addons/jetpack/lib/admin/css/admin.css"/>
 			<body>
 			<div class="jetpack-nav">
-			<a class="active" href={$modulelink}>Module Status</a>
-			<a href="{$modulelink}&action=add_product">Manage Jetpack Products</a>
+			<a class="" href={$modulelink}>Partner Details</a>
+			<a class="" href="{$modulelink}&action=manage_product">Manage Jetpack Products</a>
+			<a class="" href="{$modulelink}&action=provision_jetpack_plans">Provision Jetpack Plans</a>
 			</div>
 			</body>
 			</html>
 HTML;
+	}
+
+	/**
+	 * Provision A jetpack plan
+	 *
+	 * @return void
+	 */
+	public function provision_jetpack_plans( $params ) {
+		$output = <<<HTML
+		<form>
+		<input type="text" name="site_url" placeholder="Site URL"><br>
+		<input type="text" name="blog_user" placeholder="Blog User"><br>
+		<select>
+		<option value="Free">Free</option>
+		<option value="Personal">Personal</option>
+		<option value="Premium">Premium</option>
+		<option value="Professional">Professional</option>
+		</select><br>
+		<input type="submit" value="Provision" class="btn btn-primary">
+		</form>
+HTML;
+		return $this->jetpack_menu( $params ) . $output;
 	}
 }
