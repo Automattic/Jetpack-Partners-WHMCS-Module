@@ -22,7 +22,8 @@ function jetpack_config() {
 	return [
 		'name'        => 'Jetpack By Automattic',
 		'author'      => 'Automattic',
-		'description' => 'Setups the Jetpack By Automattic Partner Module for Provisioning Jetpack',
+		'description' => 'This module allows you to quickly create Jetpack products, add Jetpack
+		products to existing product bundles and manage and provision Jetpack plans',
 		'version'     => '0.0.1',
 		'fields'      => [
 			'partner_id'     => array(
@@ -49,6 +50,19 @@ function jetpack_config() {
  * @return void
  */
 function jetpack_activate() {
+	$this->jetpack_deactivate();
+	if ( ! Capsule::schema()->hasTable( 'jetpack_products' ) ) {
+		Capsule::schema()->create(
+			'jetpack_products',
+			function ( $table ) {
+				$table->increments( 'id' );
+				$table->integer( 'product_id' );
+				$table->string( 'plan_type' );
+				$table->integer( 'licenses_provisioned' );
+				$table->timestamps();
+			}
+		);
+	}
 }
 
 
@@ -58,6 +72,9 @@ function jetpack_activate() {
  * @return void
  */
 function jetpack_deactivate() {
+	if ( Capsule::schema()->hasTable( 'jetpack_products' ) ) {
+		Capsule::schema()->drop( 'jetpack_products' );
+	}
 }
 
 /**
