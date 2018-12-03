@@ -130,11 +130,11 @@ HTML;
 
 			$output .= <<< HTML
 			Add Product To Bundle
-			<form action="{$modulelink}&action=add_product" method="post">
+			<form action="{$modulelink}&action=add_product_to_bundle" method="post">
 				<select name="product_group_id">
 					{$product_select}
 				</select>
-				<select name="product_group_id">
+				<select name="bundle_group_id">
 					{$bundle_select}
 				</select>
 				<input type="submit" value="Submit">
@@ -171,6 +171,7 @@ HTML;
 				'gid'    => $_POST['product_group_id'],
 				'name'   => 'Jetpack - ' . $plan . ' Plan',
 				'module' => 'jetpack',
+				'hidden' => 1,
 			];
 
 			$product_id = localAPI( 'AddProduct', $post_data );
@@ -221,7 +222,39 @@ HTML;
 		}
 
 		$output = 'Product ' . $post_data['name'] . ' Successfully added.';
-		return $output;
+		return $this->manage_product( $params ) . $output;
+	}
+
+	/**
+	 * Add a Jetpack product to a whmcs bundle
+	 *
+	 * @param array $params Module configuration parameters.
+	 * @return string $output HTML output for the add product page
+	 */
+	public function add_product_to_bundle( $params ) {
+		$bundle = Capsule::table( 'tblbundles' )->where( 'id', '=', $_POST['bundle_group_id'] )->first();
+		$item_data      = ( unserialize( $bundle->itemdata ) );
+		$product_bundle = [
+			'type'             => 'product',
+			'pid'              => $_POST['product_group_id'],
+			'billingcycle'     => '0',
+			'priceoverride'    => null,
+			'price'            => '0.00',
+			'configoption'     => null,
+			'addons'           => null,
+			'regperiod'        => null,
+			'dompriceoverride' => null,
+			'domprice'         => null,
+
+		];
+		$item_data[]          = $product_bundle;
+		$serialized_item_data = serialize( $item_data );
+		Capsule::table( 'tblbundles' )->where( 'id', '=', $_POST['bundle_group_id'] )->update(
+			[ 'itemdata' => $serialized_item_data ]
+		);
+
+		$output = 'Bundle Updated';
+		return $this->manage_product( $params ) . $output;
 	}
 
 	/**
