@@ -78,7 +78,7 @@ function jetpack_deactivate() {
 }
 
 /**
- * Undocumented function
+ * Output HTML for the Jetpack addon module
  *
  * @param array $vars Module configuration options and variables.
  * @return void

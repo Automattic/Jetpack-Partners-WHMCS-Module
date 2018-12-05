@@ -268,8 +268,8 @@ function save_provisioning_details($url, $params, $pending = false)
     if ($url) {
         $details = 'URL to Activate Jetpack: ' . $url;
     } elseif ($pending) {
-        $details = 'The domain did not appear to resolve when provisioning was attempted however a Jetpack plan is 
-        waiting for ' . $params['customfields']['Site URL'] . '. Once DNS resolves please connect the site via 
+        $details = 'The domain did not appear to resolve when provisioning was attempted however a Jetpack plan is
+        waiting for ' . $params['customfields']['Site URL'] . '. Once DNS resolves please connect the site via
         the Jetpack Banner in the sites dashboard';
     }
     Capsule::table('tblcustomfieldsvalues')->where(['fieldid' => $jetpack_next_url_field->id])->update([
@@ -328,7 +328,7 @@ function get_authentication_errors_from_response($response)
     $response_message = isset($response->error_description) ? $response->error_description . '. ' :
         'No error was returned. ';
     if ($response->http_status == 400) {
-        return 'JETPACK MODULE: There was a problem getting an access token for your Jetpack hosting partner 
+        return 'JETPACK MODULE: There was a problem getting an access token for your Jetpack hosting partner
             account. This usually means the Client Id or Client Secret provided when setting up the module are invalid.
             The following error was returned trying to get an access token ' . $response_message;
     } elseif ($response->http_status >= 500) {
@@ -380,4 +380,15 @@ function get_cancellation_errors_from_response($response)
     }
     return 'JETPACK MODULE: There was an error cancelling the Jetpack plan. The following error was returned  - '
         . $response_message . ' Please contact us for assistance.';
+}
+
+function jetpack_ClientArea($vars) {
+    return array(
+        'templatefile' => 'client',
+        'vars' => array(
+            'test1' => 'hello',
+            'test2' => 'world',
+        ),
+    );
+
 }

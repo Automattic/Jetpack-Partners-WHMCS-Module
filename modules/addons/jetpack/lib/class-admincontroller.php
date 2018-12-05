@@ -9,7 +9,7 @@
 namespace Jetpack;
 
 use WHMCS\Database\Capsule;
-require_once __DIR__ . '/../../../../servers/jetpack/lib/class-jetpackpartner.php';
+require_once __DIR__ . '/../../../servers/jetpack/lib/class-jetpackpartner.php';
 use JetpackPartner\JetpackPartner;
 
 /**
