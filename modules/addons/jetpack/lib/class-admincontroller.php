@@ -11,6 +11,7 @@ namespace Jetpack;
 use WHMCS\Database\Capsule;
 require_once __DIR__ . '/../../../servers/jetpack/lib/class-jetpackpartner.php';
 use JetpackPartner\JetpackPartner;
+use Jetpack\AdminViews;
 
 /**
  * Controller for handling admin requests.
@@ -30,131 +31,52 @@ class AdminController {
 	];
 
 	/**
-	 * Undocumented function
+	 * Main module entry point. Currently the partner details page.
 	 *
 	 * @param array $params Required params for the action.
-	 * @return mixed action to perform or error string for invalid action
+	 * @return string HTML for the module menuo and partner details page
 	 */
 	public function index( $params ) {
-		$menu       = $this->jetpack_menu( $params );
-		$modulelink = $params['modulelink'];
-		$outut      = '';
-
-		if ( ! $params['partner_id'] || ! $params['partner_secret'] ) {
-			$output .= <<<HTML
-			Module Incorrectly Configured. Missing Partner ID or Partner Secret.
-			<a href="/admin/configaddonmods.php"> Update Module configuration </a>
-
-HTML;
-		} else {
-			$output .= <<<HTML
-			<p>Module Activated on: </p>
-			<p>Partner ID: {$params['partner_id']}</p>
-			<p>Partner Secret: {$params['partner_secret']}</p>
-			<a href="{$modulelink}&action=validate_partner_credentials" class="btn btn-primary">
-				Validate Partner Credentials
-			</a>
-
-HTML;
-		}
-		return $menu . $output;
+		$views = new AdminViews( $params );
+		return $views->partner_details();
 	}
 
 	/**
 	 * Manage Jetpack Products
 	 *
-	 * @param [type] $params
-	 * @return void
+	 * @param array $params Module configuration parameters.
+	 * @return string $output HTMLoutput.
 	 */
 	public function manage_product( $params ) {
-		$menu             = $this->jetpack_menu( $params );
+		$views            = new AdminViews( $params );
 		$product_groups   = Capsule::table( 'tblproductgroups' )->get();
 		$jetpack_products = Capsule::table( 'jetpack_products' )->lists( 'product_id' );
 		$modulelink       = $params['modulelink'];
 
-		$output = '';
 		if ( ! $product_groups ) {
-			$output .= <<<HTML
-			No Product Groups Found. Please <a href="/admin/configproducts.php?action=creategroup">
-			create a product group before adding a product </a>'
-HTML;
-			return $menu . $output;
+			return $views->manage_products_no_product_groups();
 		}
-
 		if ( ! $jetpack_products ) {
-			$output               .= <<<HTML
-			You Do not currently have any Jetpack products set up. Which product group
-			would you like to create the Jetpack Products under
-HTML;
-			$product_group_options = '';
-			foreach ( $product_groups as $product_group ) {
-				$product_group_options .=
-				"<option value=\"$product_group->id\">$product_group->name</option>";
-			}
-			$output .= <<<HTML
-				<form action="{$modulelink}&action=add_product" method="post">
-				<select name="product_group_id">
-					{$product_group_options}
-				</select><br>
-				<input type="submit" value="Submit">
-				</form>
-HTML;
+			return $views->manage_products_no_jetpack_products( $product_groups );
 		} else {
 			$products = Capsule::table( 'tblproducts' )
 			->whereIn( 'id', $jetpack_products )
 			->get( [ 'name', 'id' ] );
 			$bundles  = Capsule::table( 'tblbundles' )->get();
 
-			foreach ( $products as $product ) {
-				$product_table_rows .=
-				"<tr><td>$product->name</td><td>0</td></tr>";
-				$product_select     .=
-				"<option value=\"$product->id\">$product->name</option>";
-			}
-			$output .= <<<HTML
-			<table border="1">
-			<tbody>
-			<tr><th>Product Name</th><th>Licenses Provisioned</th></tr>
-			{$product_table_rows}
-			</tbody>
-			</table>
-			<br>
-HTML;
+			return $views->manage_products_view_products( $products, $bundles );
 		}
+	}
 
-		if ( ! empty( $bundles ) ) {
-			foreach ( $bundles as $bundle ) {
-				$bundle_select .=
-				"<option value=\"$bundle->id\">$bundle->name</option>";
-			}
-
-			$output .= <<< HTML
-			Add Product To Bundle
-			<form action="{$modulelink}&action=add_product_to_bundle" method="post">
-				<select name="product_group_id">
-					{$product_select}
-				</select>
-				<select name="bundle_group_id">
-					{$bundle_select}
-				</select>
-				<input type="submit" value="Submit">
-			</form>
-			<br>
-			<a href="/admin/configbundles.php" class="btn btn-primary">
-				Manage Bundles
-			</a>
-HTML;
-		} else {
-			$output .= <<<HTML
-			You have no bundles created <br>
-
-			<a href="/admin/configbundles.php" class="btn btn-primary">
-				Manage Bundles
-			</a>
-HTML;
-		}
-
-		return $menu . $output;
+	/**
+	 * Provision A jetpack plan
+	 *
+	 * @param array $params Module Parameters.
+	 * @return string $output HTMLoutput.
+	 */
+	public function provision_jetpack_plans( $params ) {
+		$views = new AdminViews( $params );
+		return $views->provision_jetpack_plans();
 	}
 
 	/**
@@ -167,11 +89,13 @@ HTML;
 	public function add_product( $params ) {
 		foreach ( $this->jetpack_plans as $plan ) {
 			$post_data = [
-				'type'   => 'other',
-				'gid'    => $_POST['product_group_id'],
-				'name'   => 'Jetpack - ' . $plan . ' Plan',
-				'module' => 'jetpack',
-				'hidden' => 1,
+				'type'          => 'other',
+				'gid'           => $_POST['product_group_id'],
+				'name'          => 'Jetpack - ' . $plan . ' Plan',
+				'module'        => 'jetpack',
+				'hidden'        => 1,
+				'configoption1' => $params['partner_id'],
+				'configoption2' => $params['partner_secret'],
 			];
 
 			$product_id = localAPI( 'AddProduct', $post_data );
@@ -214,6 +138,7 @@ HTML;
 						'fieldname'    => $field['field_name'],
 						'fieldtype'    => $field['field_type'],
 						'fieldoptions' => $field['field_options'],
+						'adminonly'    => 'on',
 						'required'     => 'on',
 						'showorder'    => 'off',
 					]
@@ -221,8 +146,13 @@ HTML;
 			}
 		}
 
-		$output = 'Product ' . $post_data['name'] . ' Successfully added.';
-		return $this->manage_product( $params ) . $output;
+		$views   = new AdminViews();
+		$message = $views->make_action_message(
+			'success',
+			'Products Created',
+			'The Jetpack products have been created and can be reviewed below.'
+		);
+		return $message . $this->manage_product( $params );
 	}
 
 	/**
@@ -232,7 +162,7 @@ HTML;
 	 * @return string $output HTML output for the add product page
 	 */
 	public function add_product_to_bundle( $params ) {
-		$bundle = Capsule::table( 'tblbundles' )->where( 'id', '=', $_POST['bundle_group_id'] )->first();
+		$bundle         = Capsule::table( 'tblbundles' )->where( 'id', '=', $_POST['bundle_group_id'] )->first();
 		$item_data      = ( unserialize( $bundle->itemdata ) );
 		$product_bundle = [
 			'type'             => 'product',
@@ -258,69 +188,31 @@ HTML;
 	}
 
 	/**
-	 * Validate a partners id and secret entered when they configured the addon module.
+	 * Validate a partners id and secret entered when they configured the addon module. Return a
+	 * success message if the id and secret can be used to get a token or an error message and a
+	 * link to update the credentials if not.
 	 *
 	 * @param array $params Module Parameters.
-	 * @return bool True if there is an access token else false
+	 * @return string $message a success or error message and the index page html.
 	 */
 	public function validate_partner_credentials( $params ) {
 		$partner = new JetpackPartner( $params['partner_id'], $params['partner_secret'] );
+		$views   = new AdminViews();
 		if ( $partner->access_token ) {
-			$output .= <<<HTML
-			<p>Your Partner Id and Secret are correct and can be used to provision Jetpack Plans.</p>
-HTML;
+			$message = $views->make_action_message(
+				'success',
+				'Valid Credentials',
+				'Your partner credentials are valid and can be used to provision Jetpack plans.'
+			);
 		} else {
-			$output .= <<<HTML
-			<p>Module Incorrectly Configured. Your Partner ID or Secret is not valid.
-			<a href="/admin/configaddonmods.php"> Update Module configuration </a>
-			</p>
-
-HTML;
+			$message = $views->make_action_message(
+				'error',
+				'Invalid Credentials',
+				'<p>Module Incorrectly Configured. Your Partner ID or Secret is not valid.
+				<a href="/admin/configaddonmods.php"> Update Module configuration </a>'
+			);
 		}
-		return $this->index( $params ) . $output;
+		return $message . $this->index( $params );
 	}
 
-	/**
-	 * Main Menu for Jetpack Addon Module
-	 *
-	 * @param array $params Module parameters.
-	 * @return string $output HTML output for the add product page
-	 */
-	public function jetpack_menu( $params ) {
-		$modulelink = $params['modulelink'];
-		return <<<HTML
-			<html>
-			<link rel="stylesheet" type="text/css" href="/modules/addons/jetpack/lib/admin/css/admin.css"/>
-			<body>
-			<div class="jetpack-nav">
-			<a class="" href={$modulelink}>Partner Details</a>
-			<a class="" href="{$modulelink}&action=manage_product">Manage Jetpack Products</a>
-			<a class="" href="{$modulelink}&action=provision_jetpack_plans">Provision Jetpack Plans</a>
-			</div>
-			</body>
-			</html>
-HTML;
-	}
-
-	/**
-	 * Provision A jetpack plan
-	 *
-	 * @return void
-	 */
-	public function provision_jetpack_plans( $params ) {
-		$output = <<<HTML
-		<form>
-		<input type="text" name="site_url" placeholder="Site URL"><br>
-		<input type="text" name="blog_user" placeholder="Blog User"><br>
-		<select>
-		<option value="Free">Free</option>
-		<option value="Personal">Personal</option>
-		<option value="Premium">Premium</option>
-		<option value="Professional">Professional</option>
-		</select><br>
-		<input type="submit" value="Provision" class="btn btn-primary">
-		</form>
-HTML;
-		return $this->jetpack_menu( $params ) . $output;
-	}
 }
