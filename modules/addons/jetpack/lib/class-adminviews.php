@@ -68,14 +68,20 @@ class AdminViews {
 	public function jetpack_menu() {
 		return <<<HTML
 			<html>
-			<link rel="stylesheet" type="text/css" href="/modules/addons/jetpack/lib/css/admin.css"/>
+			<link rel="stylesheet" type="text/css" href="/modules/addons/jetpack/lib/css/admin.css" />
+
 			<body>
-			<div class="jetpack-nav">
-			<a class="" href="{$this->module_link}">Partner Details</a>
-			<a class="" href="{$this->module_link}&action=manage_product">Manage Jetpack Products</a>
-			<a class="" href="{$this->module_link}&action=provision_jetpack_plans">Provision Jetpack Plans</a>
-			</div>
+				<p> The addon module allows you to create a Jetpack product for each of the availalbe
+					Jetpack Plans (Free, Personal, Premium, Professional) with the required custom fields
+					for provisioning pre configured. Use the Validate Credentials option to make sure your
+					partner ID and partner secret are valid and can be used to provision Jetpack plans. </p>
+				<div class="jetpack-nav">
+					<a class="" href="{$this->module_link}">Partner Details</a>
+					<a class="" href="{$this->module_link}&action=manage_product">Manage Jetpack Products</a>
+					<a class="" href="{$this->module_link}&action=provision_jetpack_plans">Provision Jetpack Plans</a>
+				</div>
 			</body>
+
 			</html>
 HTML;
 	}
@@ -96,7 +102,7 @@ HTML;
 		];
 		return <<<HTML
 					<div class="{$type_div[$type]}"><strong>
-					<span class="title">{$title}!</span>
+						<span class="title">{$title}!</span>
 					</strong><br>{$message}</div>
 HTML;
 	}
@@ -115,13 +121,25 @@ HTML;
 HTML;
 		} else {
 			$output .= <<<HTML
-			<p>Module Activated on: </p>
-			<p>Partner ID: {$this->partner_id}</p>
-			<p>Partner Secret: {$this->partner_secret}</p>
-			<a href="{$this->module_link}&action=validate_partner_credentials" class="btn btn-primary">
-				Validate Partner Credentials
-			</a>
+				<table class="datatable no-margin" width="100%" border="0" cellspacing="1" cellpadding="3">
+					<tbody>
+						<tr>
+							<th>Partner ID</th>
+							<th>Partner Secret</th>
+						</tr>
+						<tr>
+							<td>{$this->partner_id}</td>
+							<td>{$this->partner_secret}
+						</tr>
+						</td>
+					</tbody>
+				</table>
 
+				<div class="btn-container">
+					<a href="{$this->module_link}&action=validate_partner_credentials" class="btn btn-primary">
+						Validate Partner Credentials
+					</a>
+				</div>
 HTML;
 		}
 		return $this->make_module_page( $output );
@@ -169,10 +187,19 @@ HTML;
 		}
 		$output .= <<<HTML
 			<form action="{$this->module_link}&action=add_product" method="post">
-			<select name="product_group_id">
-				{$product_group_options}
-			</select><br>
-			<input type="submit" value="Create" class="btn btn-primary">
+				<table class="form" width="100%" border="0" cellspacing="2" cellpadding="3">
+					<tbody>
+						<tr>
+							<td width="150" class="fieldlabel">Product Group</td>
+							<td class="fieldarea">
+								<select name="product_group_id">
+									{$product_group_options}
+								</select><br>
+					</tbody>
+				</table>
+				<div class="btn-container">
+					<input type="submit" value="Create" class="btn btn-primary">
+				</div>
 			</form>
 HTML;
 		return $this->make_module_page( $output, $message );
@@ -195,16 +222,21 @@ HTML;
 		}
 
 		$output .= <<<HTML
-		<table border="1">
-			<tbody>
-			<tr><th>Product Name</th><th>Licenses Provisioned</th></tr>
-			{$product_table_rows}
-			</tbody>
-		</table>
-		<br>
+			<table class="datatable no-margin" width="100%" border="0" cellspacing="1" cellpadding="3">
+				<tbody>
+					<tr>
+						<th>Product Name</th>
+						<th>Licenses Provisioned</th>
+					</tr>
+					{$product_table_rows}
+				</tbody>
+			</table>
+			<br>
 HTML;
 		if ( ! empty( $bundles ) ) {
-			$output .= $this->add_jetpack_to_bundle( $product_select, $bundles );
+			$output .= '<a href="/admin/configbundles.php" class="btn btn-primary">
+			Manage Bundles
+		</a>';
 		} else {
 			$message = $this->make_action_message(
 				'info',
@@ -218,55 +250,45 @@ HTML;
 	}
 
 	/**
-	 * Form for adding a Jetpack product to a bundle
-	 *
-	 * @param array $product_select Jetpack product select options.
-	 * @param array $bundles whmcs product bundles.
-	 * @return string $output HTMLoutput.
-	 */
-	public function add_jetpack_to_bundle( $product_select, $bundles ) {
-		foreach ( $bundles as $bundle ) {
-			$bundle_select .=
-			"<option value=\"$bundle->id\">$bundle->name</option>";
-		}
-
-		$output .= <<< HTML
-		Add Product To Bundle
-		<form action="{$this->module_link}&action=add_product_to_bundle" method="post">
-			<select name="product_group_id">
-				{$product_select}
-			</select>
-			<select name="bundle_group_id">
-				{$bundle_select}
-			</select>
-			<input type="submit" value="Submit">
-		</form>
-		<br>
-		<a href="/admin/configbundles.php" class="btn btn-primary">
-			Manage Bundles
-		</a>
-HTML;
-		return $output;
-	}
-
-	/**
 	 * Form for manually provisioning a jetpack plan.
 	 *
 	 * @return string $output HTMLoutput.
 	 */
 	public function provision_jetpack_plans() {
 		$output = <<<HTML
-		<form>
-		<input type="text" name="site_url" placeholder="Site URL"><br>
-		<input type="text" name="blog_user" placeholder="Blog User"><br>
-		<select>
-		<option value="Free">Free</option>
-		<option value="Personal">Personal</option>
-		<option value="Premium">Premium</option>
-		<option value="Professional">Professional</option>
-		</select><br>
-		<input type="submit" value="Provision" class="btn btn-primary">
-		</form>
+			<form action="{$this->module_link}&action=provision_plan" method="post">
+				<table class="form" width="100%" border="0" cellspacing="2" cellpadding="3">
+					<tbody>
+						<tr>
+							<td width="150" class="fieldlabel">Plan Type</td>
+							<td class="fieldarea">
+								<select name="plan_type" class="form-control select-inline">
+									<option value="Free">Free</option>
+									<option value="Personal">Personal</option>
+									<option value="Premium">Premium</option>
+									<option value="Professional">Professional</option>
+								</select></td>
+						</tr>
+						<tr>
+							<td class="fieldlabel">
+								Site URL </td>
+							<td class="fieldarea">
+								<input type="text" class="form-control input-500" name="site_url">
+							</td>
+						</tr>
+						<tr>
+							<td class="fieldlabel">
+								Blog User </td>
+							<td class="fieldarea">
+								<input type="text" class="form-control input-500" name="blog_user">
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="btn-container">
+					<input type="submit" value="Provision Plan" class="btn btn-primary">
+				</div>
+			</form>
 HTML;
 		return $this->make_module_page( $output );
 	}

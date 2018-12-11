@@ -23,7 +23,7 @@ function jetpack_config() {
 		'name'        => 'Jetpack By Automattic',
 		'author'      => 'Automattic',
 		'description' => 'This module allows you to quickly create Jetpack products, add Jetpack
-		products to existing product bundles and manage and provision Jetpack plans',
+		products to existing product bundles and manage Jetpack plans',
 		'version'     => '0.0.1',
 		'fields'      => [
 			'partner_id'     => array(

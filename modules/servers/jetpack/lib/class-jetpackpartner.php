@@ -94,12 +94,13 @@ class JetpackPartner {
 	public function provision_plan( string $plan, string $local_user ) {
 		$request_data = [
 			'plan'           => strtolower( $plan ),
-			'site_url'       => $this->clean_url( $this->site_url ),
+			'siteurl'       => $this->clean_url( $this->site_url ),
 			'local_user'     => $local_user,
 			'force_register' => true,
 		];
 
 		$response = $this->make_partner_api_request( 'provision', $request_data );
+		return $response;
 	}
 
 	/**

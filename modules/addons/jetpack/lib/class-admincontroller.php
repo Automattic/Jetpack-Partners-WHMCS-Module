@@ -52,16 +52,16 @@ class AdminController {
 		$product_groups   = Capsule::table( 'tblproductgroups' )->get();
 		$jetpack_products = Capsule::table( 'jetpack_products' )->lists( 'product_id' );
 		$modulelink       = $params['modulelink'];
+		$products = Capsule::table( 'tblproducts' )
+		->whereIn( 'id', $jetpack_products )
+		->get( [ 'name', 'id' ] );
 
 		if ( ! $product_groups ) {
 			return $views->manage_products_no_product_groups();
 		}
-		if ( ! $jetpack_products ) {
+		if ( ! $jetpack_products || ! $products ) {
 			return $views->manage_products_no_jetpack_products( $product_groups );
 		} else {
-			$products = Capsule::table( 'tblproducts' )
-			->whereIn( 'id', $jetpack_products )
-			->get( [ 'name', 'id' ] );
 			$bundles  = Capsule::table( 'tblbundles' )->get();
 
 			return $views->manage_products_view_products( $products, $bundles );
@@ -128,6 +128,12 @@ class AdminController {
 					'description'   => 'The type of plan to provision',
 					'field_options' => '',
 				],
+				[
+					'field_name'    => 'jetpack_provisioning_details',
+					'field_type'    => 'text',
+					'description'   => 'Jetpack Provision details from response',
+					'field_options' => '',
+				],
 			];
 
 			foreach ( $custom_fields as $field ) {
@@ -156,38 +162,6 @@ class AdminController {
 	}
 
 	/**
-	 * Add a Jetpack product to a whmcs bundle
-	 *
-	 * @param array $params Module configuration parameters.
-	 * @return string $output HTML output for the add product page
-	 */
-	public function add_product_to_bundle( $params ) {
-		$bundle         = Capsule::table( 'tblbundles' )->where( 'id', '=', $_POST['bundle_group_id'] )->first();
-		$item_data      = ( unserialize( $bundle->itemdata ) );
-		$product_bundle = [
-			'type'             => 'product',
-			'pid'              => $_POST['product_group_id'],
-			'billingcycle'     => '0',
-			'priceoverride'    => null,
-			'price'            => '0.00',
-			'configoption'     => null,
-			'addons'           => null,
-			'regperiod'        => null,
-			'dompriceoverride' => null,
-			'domprice'         => null,
-
-		];
-		$item_data[]          = $product_bundle;
-		$serialized_item_data = serialize( $item_data );
-		Capsule::table( 'tblbundles' )->where( 'id', '=', $_POST['bundle_group_id'] )->update(
-			[ 'itemdata' => $serialized_item_data ]
-		);
-
-		$output = 'Bundle Updated';
-		return $this->manage_product( $params ) . $output;
-	}
-
-	/**
 	 * Validate a partners id and secret entered when they configured the addon module. Return a
 	 * success message if the id and secret can be used to get a token or an error message and a
 	 * link to update the credentials if not.
@@ -213,6 +187,23 @@ class AdminController {
 			);
 		}
 		return $message . $this->index( $params );
+	}
+
+	/**
+	 * Provision a Jetpack Plan
+	 *
+	 * @return void
+	 */
+	public function provision_plan( $params ) {
+		$views   = new AdminViews();
+		$message = $views->make_action_message(
+			'success',
+			'Plan Provisioned',
+			'<p>Plan successfully provisioned</a>'
+		);
+		$partner = new JetpackPartner( $params['partner_id'], $params['partner_secret'], $_POST['site_url'] );
+		$response = $partner->provision_plan( $_POST['plan_type'], $_POST['blog_user'] );
+		return $message . $views->provision_jetpack_plans();
 	}
 
 }
