@@ -1,0 +1,10 @@
+{
+	"autoload": {
+	  "psr-4": {
+		"Jetpack\\": "lib/Jetpack/"
+		}
+	},
+	"require": {
+		"guzzlehttp/guzzle": "^7.0"
+	}
+}
