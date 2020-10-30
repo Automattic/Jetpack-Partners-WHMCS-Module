@@ -25,16 +25,24 @@ class JetpackLicenseManager
     /**
      * Base API URL for the Jetpack Licensing API.
      */
-    public const BASE_API_URL = 'https://public-api.wordpress.com/wpcom/v2/';
+    public const BASE_API_URL = 'https://public-api.wordpress.com/wpcom/v2/jetpack-licensing/';
 
-    public const LICENSING_API_URI = 'jetpack-licensing/license/';
+    /**
+     * Licensing API URI
+     */
+    public const LICENSING_API_URI = 'license/';
+
+    /**
+     * Licensing API URI
+     */
+    public const PRODUCTS_API_URI = 'product-families/';
 
     /**
      * Class Constructor
      *
      * @param string $partner_api_token Partner Jetpack Licensing API token.
      */
-    public function __construct(string $partner_api_token)
+    public function __construct(string $partner_api_token = null)
     {
         $this->$partner_api_token = $partner_api_token;
         $this->client = new Client(
@@ -91,5 +99,16 @@ class JetpackLicenseManager
         return $response;
     }
 
-
+    /**
+     * Revoke a liencse for a Jetpack Product
+     *
+     * @param string $license license key
+     * @return Response
+     */
+    public function getJetpackProducts() {
+        $response = $this->client->get(
+            self::PRODUCTS_API_URI,
+        );
+        return $response;
+    }
 }
