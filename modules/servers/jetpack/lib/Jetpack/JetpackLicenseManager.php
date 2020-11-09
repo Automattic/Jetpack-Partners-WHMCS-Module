@@ -2,113 +2,72 @@
 
 namespace Jetpack;
 
-use GuzzleHttp\Client as Client;
-use GuzzleHttp\Psr7\Response;
+use WHMCS\Database\Capsule;
 
 class JetpackLicenseManager
 {
-
     /**
-     * The partner token for the Jetpack Licensing API.
+     * Save a new License for a product prov isioned through the Jetpack Licensing API on a WHMCS order
      *
-     * @var string
+     * @param integer $order_id THe WHMCS order id.
+     * @param integer $product_id The WHMCS product id.
+     * @param string $license_key The Jetpack product license.
+     * @param string $licnese_issued_at The date the license was issued at supplied by the Jetpack Licensing API.
+     * @return void
      */
-    public $partner_api_token;
-
-    /**
-     * Guzzle HTTP client for API request handling
-     *
-     * @var Client
-     */
-    public $client;
-
-    /**
-     * Base API URL for the Jetpack Licensing API.
-     */
-    public const BASE_API_URL = 'https://public-api.wordpress.com/wpcom/v2/jetpack-licensing/';
-
-    /**
-     * Licensing API URI
-     */
-    public const LICENSING_API_URI = 'license/';
-
-    /**
-     * Licensing API URI
-     */
-    public const PRODUCTS_API_URI = 'product-families/';
-
-    /**
-     * Class Constructor
-     *
-     * @param string $partner_api_token Partner Jetpack Licensing API token.
-     */
-    public function __construct(string $partner_api_token = null)
+    public function saveLicense(int $order_id, int $product_id, string $license_key, string $licnese_issued_at)
     {
-        $this->$partner_api_token = $partner_api_token;
-        $this->client = new Client(
+        Capsule::table('jetpack_product_licenses')->insert(
             [
-                'base_uri' => self::BASE_API_URL,
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $partner_api_token
-                ],
+                'order_id' => $order_id,
+                'product_id' => $product_id,
+                'license_key' => $license_key,
+                'issued_at' => $licnese_issued_at,
             ]
         );
     }
 
     /**
-     * Get License information for a Jetpack product
+     * Update a license record with a revoked at time provided by the Jetpack licensing API when
+     * a license i reovked
      *
-     * @param string $license_key license key
-     * @return Response
+     * @param string $licnese_id The license id to update
+     * @param string $revoked_at The time supplied by the API when the license was revoked
+     * @return void
      */
-    public function getLicense(string $license_key)
+    public function revokeLicense(string $licnese_id, string $revoked_at) {
+        Capsule::table('jetpack_product_licenses')
+        ->where([ 'id' => $licnese_id])
+        ->update(['revoked_at' => $revoked_at]);
+    }
+
+    /**
+     * Find an active licnese for a WHMCS order for a jetpack prdouct
+     *
+     * @param array WHMCS $params
+     * @return StdObject
+     */
+    public function findActiveLicense(int $order_id, int $product_id)
     {
-        $response = $this->client->get(
-            self::LICENSING_API_URI,
-            ['query' => ['license_key' => $license_key]]
-        );
-        return $response;
+        return Capsule::table('jetpack_product_licenses')
+        ->where(
+            [
+                'order_id' => $order_id,
+                'product_id' => $product_id,
+                'revoked_at' => null,
+            ]
+        )
+        ->first();
     }
 
     /**
-     * Issue a license for a Jetpack Product
+     * Get the license key for an active license for a jetpack product
      *
-     * @param string $product_identifier product slug/identifier
-     * @return Response
+     * @return stirng The license key or "No License Key Found"
      */
-    public function issueLicense(string $product_identifier)
+    public function getLicenseKey(int $order_id, int $product_id)
     {
-        $response = $this->client->post(
-            self::LICENSING_API_URI,
-            ['query' => ['product' => $product_identifier]]
-        );
-        return $response;
-    }
-
-    /**
-     * Revoke a liencse for a Jetpack Product
-     *
-     * @param string $license license key
-     * @return Response
-     */
-    public function revokeLicense(string $license_key) {
-        $response = $this->client->delete(
-            self::LICENSING_API_URI,
-            ['query' => ['license_key' => $license_key]]
-        );
-        return $response;
-    }
-
-    /**
-     * Revoke a liencse for a Jetpack Product
-     *
-     * @param string $license license key
-     * @return Response
-     */
-    public function getJetpackProducts() {
-        $response = $this->client->get(
-            self::PRODUCTS_API_URI,
-        );
-        return $response;
+        $license = $this->findActiveLicense($order_id, $product_id);
+        return isset($license->license_key) ? $license->license_key : 'No License Key Found';
     }
 }

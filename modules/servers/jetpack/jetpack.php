@@ -1,7 +1,9 @@
 <?php
 
-use WHMCS\Database\Capsule;
+use Jetpack\JetpackLicenseAPIManager;
 use Jetpack\JetpackLicenseManager;
+use WHMCS\Database\Capsule;
+
 
 include_once(__DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
@@ -72,22 +74,21 @@ function jetpack_ConfigOptions()
  */
 function jetpack_CreateAccount(array $params)
 {
-    $existing_license_key = find_active_license_key($params);
-    if (! is_null($existing_license_key)) {
+    $license_manager = new JetpackLicenseManager();
+    $existing_license = $license_manager->findActiveLicense($params['model']['orderid'], $params['pid']);
+    if (! is_null($existing_license)) {
         return 'License Key Already Exists';
     }
-    $license_manager = new JetpackLicenseManager($params['configoption1']);
+    $license_api_manager = new JetpackLicenseAPIManager($params['configoption1']);
     try {
-        $response = $license_manager->issueLicense($params['configoption2']);
+        $response = $license_api_manager->issueLicense($params['configoption2']);
         if ($response->getStatusCode() == 200) {
             $license = json_decode($response->getBody(), true);
-            Capsule::table('jetpack_product_licenses')->insert(
-                [
-                    'order_id' => $params['model']['orderid'],
-                    'product_id' => $params['pid'],
-                    'license_key' => $license['license_key'],
-                    'issued_at' => $license['issued_at'],
-                ]
+            $license_manager->saveLicense(
+                $params['model']['orderid'],
+                $params['pid'],
+                $license['license_key'],
+                $license['issued_at']
             );
             return 'success';
         }
@@ -106,16 +107,15 @@ function jetpack_CreateAccount(array $params)
  */
 function jetpack_TerminateAccount(array $params)
 {
-    $license_manager = new JetpackLicenseManager($params['configoption1']);
-    $license_key = find_active_license_key($params);
-    if (! is_null($license_key) && isset($license_key->license_key)) {
+    $license_manager = new JetpackLicenseManager();
+    $existing_license = $license_manager->findActiveLicense($params['model']['orderid'], $params['pid']);
+    if (! is_null($existing_license) && isset($existing_license->license_key)) {
         try {
-            $response = $license_manager->revokeLicense($license_key->license_key);
+            $license_api_manager = new JetpackLicenseAPIManager($params['configoption1']);
+            $response = $license_api_manager->revokeLicense($existing_license->license_key);
             if ($response->getStatusCode() == 200) {
                 $license = json_decode($response->getBody(), true);
-                Capsule::table('jetpack_product_licenses')
-                ->where([ 'id' => $license_key->id])
-                ->update(['revoked_at' => $license['revoked_at']]);
+                $license_manager->revokeLicense($existing_license->id, $license['revoked_at']);
                 return 'success';
             }
         } catch (Exception $e) {
@@ -134,7 +134,7 @@ function jetpack_TerminateAccount(array $params)
 function jetpack_FetchProducts()
 {
     //TODO Update no auth requirement
-    $response =  ( new JetpackLicenseManager() )->getJetpackProducts();
+    $response =  ( new JetpackLicenseAPIManager() )->getJetpackProducts();
     if ($response->getStatusCode() == 200) {
         $product_families = json_decode($response->getBody(), true);
         $product_list = [];
@@ -156,7 +156,7 @@ function jetpack_FetchProducts()
  */
 function jetpack_CreateLicensesTable()
 {
-    if (!Capsule::schema()->hasTable('jetpack_product_licenses')) {
+    if (! Capsule::schema()->hasTable('jetpack_product_licenses')) {
         try {
             Capsule::schema()->create(
                 'jetpack_product_licenses',
@@ -186,12 +186,10 @@ function jetpack_CreateLicensesTable()
  */
 function jetpack_AdminServicesTabFields($params)
 {
-    $license_key = find_active_license_key($params) ?? '';
-    $license_key_value = isset($license_key->license_key) ? $license_key->license_key : 'No License Key Found';
-    $fieldsarray = [
-     'License Key' => '<input type="text" name="licensekey" disabled size="60" value="' . $license_key_value . '" />',
+    $license_key = (new JetpackLicenseManager() )->getLicenseKey($params['model']['orderid'], $params['pid']);
+    return [
+     'License Key' => '<input type="text" name="licensekey" disabled size="60" value="' . $license_key . '" />',
     ];
-    return $fieldsarray;
 }
 
 /**
@@ -202,32 +200,12 @@ function jetpack_AdminServicesTabFields($params)
  */
 function jetpack_ClientArea($params)
 {
-    $license_key = find_active_license_key($params);
-    $license_key_value = isset($license_key->license_key) ? $license_key->license_key : 'No License Key Found';
     return [
         'templatefile' => 'clientarea',
         'vars' => [
-            'license_key' => $license_key_value,
+            'license_key' => (new JetpackLicenseManager() )->getLicenseKey($params['model']['orderid'], $params['pid']),
         ],
     ];
-}
-
-/**
- * Find an active licnese key for an order for a jetpack prdouct
- *
- * @param array WHMCS $params
- * @return StdObject
- */
-function find_active_license_key(array $params) {
-    return Capsule::table('jetpack_product_licenses')
-    ->where(
-        [
-            'order_id' => $params['model']['orderid'],
-            'product_id' => $params['pid'],
-            'revoked_at' => null,
-        ]
-    )
-    ->first();
 }
 
 /**
