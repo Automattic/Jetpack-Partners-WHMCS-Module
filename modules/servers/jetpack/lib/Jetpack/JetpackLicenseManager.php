@@ -68,6 +68,9 @@ class JetpackLicenseManager
     public function getLicenseKey(int $order_id, int $product_id)
     {
         $license = $this->findActiveLicense($order_id, $product_id);
-        return isset($license->license_key) ? $license->license_key : 'No License Key Found';
+        if (is_null($license)) {
+            return null;
+        }
+        return $license->license_key;
     }
 }
