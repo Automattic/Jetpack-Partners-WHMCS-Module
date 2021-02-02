@@ -30,8 +30,9 @@ const ERROR_PREFIX = 'JETPACK_PROVISIONING_MODULE_ERROR:';
 function jetpack_MetaData()
 {
     return [
-        'DisplayName' => 'Jetpack',
+        'DisplayName' => 'Jetpack Provisioning',
         'Description' => 'Use this module to manage licenses for Jetpack products with your Jetpack partner account',
+        'version'     => '0.0.1',
         'APIVersion' => '1.1',
         'RequiresServer' => false,
     ];
@@ -44,24 +45,34 @@ function jetpack_MetaData()
  */
 function jetpack_ConfigOptions()
 {
-    return [
+    if ( Capsule::schema()->hasTable('jetpack_product_licenses')) {
+        $licensing_table = [];
+    } else {
+        $licensing_table = [
+            'Licenses Table' => [
+                'Type' => 'text',
+                'Loader' => 'jetpack_CreateLicensesTable',
+                'SimpleMode' => true,
+            ],
+        ];
+    }
+
+    $config_options = [
         'API Token' => [
-            'Type' => 'password',
+            'Type' => 'text',
             'Size' => '256',
+            'Default' => get_api_token(),
             'SimpleMode' => true,
         ],
-        'Jetpack Products' => [
+        'Jetpack Product' => [
             'Type' => 'dropdown',
             'Size' => '256',
             'Loader' => 'jetpack_FetchProducts',
             'SimpleMode' => true,
         ],
-        'Licenses Table' => [
-            'Type' => 'text',
-            'Loader' => 'jetpack_CreateLicensesTable',
-            'SimpleMode' => true,
-        ],
     ];
+
+    return array_merge($config_options, $licensing_table);
 }
 
 /**
@@ -127,7 +138,7 @@ function jetpack_TerminateAccount(array $params)
 }
 
 /**
- * Fetch Jetpack Products list.
+ * Undocumented function
  *
  * @return void
  */
@@ -149,6 +160,23 @@ function jetpack_FetchProducts()
     }
 }
 
+function get_api_token()
+{
+    $api_token = Capsule::table('tblproducts')->select('configoption1')
+        ->where(['servertype' => 'jetpack',])->whereRaw('configoption1 <> ""')->first();
+    if (! is_null($api_token)) {
+        return $api_token->configoption1;
+    }
+
+    $api_token = Capsule::table('tbladdonmodules')
+        ->where(['module' => 'jetpack', 'setting' => 'api_token'])->whereRaw('value <> ""')->first();
+    if (! is_null($api_token)) {
+        return $api_token->value;
+    }
+
+    return 'Please Enter Your API Token';
+}
+
 /**
  * Create a table in WHMCS to store licenses for purchased Jetpack Products
  *
@@ -156,25 +184,22 @@ function jetpack_FetchProducts()
  */
 function jetpack_CreateLicensesTable()
 {
-    if (! Capsule::schema()->hasTable('jetpack_product_licenses')) {
-        try {
-            Capsule::schema()->create(
-                'jetpack_product_licenses',
-                function ($table) {
-                    /** @var \Illuminate\Database\Schema\Blueprint $table */
-                    $table->increments('id');
-                    $table->integer('order_id');
-                    $table->integer('product_id');
-                    $table->string('license_key');
-                    $table->timestamp('issued_at');
-                    $table->timestamp('revoked_at')->nullable();
-                }
-            );
-        } catch (\Exception $e) {
-            throw new Exception($e->getMessage());
-        }
+    try {
+        Capsule::schema()->create(
+            'jetpack_product_licenses',
+            function ($table) {
+                /** @var \Illuminate\Database\Schema\Blueprint $table */
+                $table->increments('id');
+                $table->integer('order_id');
+                $table->integer('product_id');
+                $table->string('license_key');
+                $table->timestamp('issued_at');
+                $table->timestamp('revoked_at')->nullable();
+            }
+        );
+    } catch (\Exception $e) {
+        throw new Exception($e->getMessage());
     }
-    return 'Licensing Table Exists';
 }
 
 
