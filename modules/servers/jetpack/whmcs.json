@@ -1,0 +1,31 @@
+{
+	"schema": "1.0",
+	"type": "whmcs-servers",
+	"name": "jetpack",
+	"license": "GPLv2",
+	"category": "provisioning",
+	"description": {
+		"name": "Jetpack Provisioning",
+		"tagline": "Provision licenses for most popular wordpress plugin for just about everything.",
+		"features": [
+			"24/7 AUTO SITE SECURITY",
+			"PEAK SPEED AND PERFORMANCE",
+			"POWERFUL TOOLS FOR GROWTH",
+			"EASY DESIGN TOOLS",
+			"INTEGRATIONS",
+			"EXPERT SUPPORT"
+		  ]
+	},
+	"logo": {
+		"filename": "jetpack-logo.png"
+	  },
+	"support": {
+	  "docs_url": "https:\/\/github.com/Automattic\/Jetpack-Partners-WHMCS-Module"
+	},
+	"authors": [
+	  {
+		"name": "Automattic",
+		"homepage": "https:\/\/www.automattic.com\/"
+	  }
+	]
+  }
