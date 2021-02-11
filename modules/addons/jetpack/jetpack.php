@@ -26,7 +26,7 @@ function jetpack_config() {
         'description' => 'This module allows you to quickly create Jetpack products as WHMCS
                             products and product addons. It also allows for updating your API token
                             for multiple provisioning module usage instances of the accompanying Jetpack provisioning module.',
-        'version'     => '0.0.1',
+        'version'     => '1.0.0',
         'fields'      => [
             'api_token'     => array(
                 'FriendlyName' => 'Jetpack Partner API Token',
