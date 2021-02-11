@@ -6,14 +6,11 @@
 	"category": "utilities",
 	"description": {
 		"name": "Jetpack Addon",
-		"tagline": "Provision licenses for the most popular wordpress plugin for just about everything.",
+		"tagline": "Create Jetpack products as WHMCS products and product addons.",
 		"features": [
-			"24/7 AUTO SITE SECURITY",
-			"PEAK SPEED AND PERFORMANCE",
-			"POWERFUL TOOLS FOR GROWTH",
-			"EASY DESIGN TOOLS",
-			"INTEGRATIONS",
-			"EXPERT SUPPORT"
+			"The module will automattically preset the Jetpack provisioning module and requied configuration options.",
+			"Easily update your partner API token for all existing products or product addons.",
+			"View and access all existing products and product addons using the Jetpack provisioning moudle."
 		  ]
 	},
 	"logo": {

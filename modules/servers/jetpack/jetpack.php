@@ -32,7 +32,6 @@ function jetpack_MetaData()
     return [
         'DisplayName' => 'Jetpack Provisioning',
         'Description' => 'Use this module to manage licenses for Jetpack products with your Jetpack partner account',
-        'version'     => '0.0.1',
         'APIVersion' => '1.1',
         'RequiresServer' => false,
     ];
@@ -215,24 +214,6 @@ function jetpack_AdminServicesTabFields($params)
     $license_key = isset($license_key) ? $license_key : 'No License Key Found';
     return [
      'License Key' => '<input type="text" name="licensekey" disabled size="60" value="' . $license_key . '" />',
-    ];
-}
-
-/**
- * Output Jetpack License to the WHMCS client area.
- *
- * @param array WHMCS $params
- * @return array Client Area output.
- */
-function jetpack_ClientArea($params)
-{
-    $license_key = (new JetpackLicenseManager() )->getLicenseKey($params['model']['orderid'], $params['pid']);
-    $license_key = isset($license_key) ? $license_key : 'No License Key Found';
-    return [
-        'templatefile' => 'clientarea',
-        'vars' => [
-            'license_key' => $license_key,
-        ],
     ];
 }
 
