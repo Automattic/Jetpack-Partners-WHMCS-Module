@@ -38,7 +38,8 @@ class AdminViews {
      *
      * @param array $params whmcs module parameters.
      */
-    public function __construct( $params ) {
+    public function __construct($params)
+    {
         $this->module_link    = $params['modulelink'];
         $this->partner_api_token     = $params['api_token'];
     }
@@ -74,7 +75,8 @@ class AdminViews {
      * @param string $message The message to display.
      * @return string $output HTMLoutput.
      */
-    public function make_action_message( $type, $title, $message ) {
+    public function makeActionMessage($type, $title, $message)
+    {
         $type_div = [
             'info'    => 'infobox',
             'success' => 'successbox',
@@ -92,13 +94,13 @@ class AdminViews {
      */
     public function listProductsView()
     {
-        $products = Capsule::table( 'tblproducts' )->where('servertype', 'jetpack')->select(['id','name'])->get();
-        $product_addons = Capsule::table( 'tbladdons' )->where('module', 'jetpack')->select(['id','name'])->get();
+        $products = Capsule::table('tblproducts')->where('servertype', 'jetpack')->select(['id','name'])->get();
+        $product_addons = Capsule::table('tbladdons')->where('module', 'jetpack')->select(['id','name'])->get();
         $table_row_products = '';
         $table_row_product_addons = '';
 
         if ($products->isEmpty() && $product_addons->isEmpty()) {
-            $table_row_products = '<tr><td colspan ="3"; style="text-align: center";> No Jetpack products or product addons found. Add some below</td></tr>';
+            $table_row_products = '<tr><td colspan ="3"; style="text-align: center";> No Jetpack products or product addons found. Add some below.</td></tr>';
         }
         if (!$products->isEmpty()) {
             foreach ($products as $product) {
@@ -138,28 +140,32 @@ class AdminViews {
         $select_options = $this->makeSelectOptions($products);
         return <<<HTML
         <div style="text-align:center;">
-            <p><b>Add Jetpack products to your product catalog (hidden by default)</b></p>
+            <p><b>Add Jetpack products to your product catalog (hidden by default).</b></p>
         </div>
         <form action="{$this->module_link}&action=addProduct" method="post">
             <table class="form" width="100%" border="0" cellspacing="2" cellpadding="3">
                 <tbody>
                     <tr>
-                        <td class="fieldarea" style="text-align:center;">
+                        <td class="fieldlabel" style="min-width:200px;">Jetpack Product</td>
+                        <td class="fieldarea">
                             <select name="jetpack_product" class="form-control select-inline">
-                            {$select_options}
-                            </select><br>
-                            As
-                            <br>
+                                {$select_options}
+                            </select> The Jetpack product you would like to add.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="fieldlabel" style="min-width:200px;">WHMCS Product Type</td>
+                        <td class="fieldarea">
                             <select name="product_type" class="form-control select-inline">
-                            <option value='product'>Product</option>";;
-                            <option value='product_addon'>Product Addon</option>";;
-                            </select><br>
+                                <option value='product'>Product</option>"
+                                <option value='product_addon'>Product Addon</option>"
+                            </select> The type of WHMCS product to be created (standalone product or product addon).
                         </td>
                     </tr>
                 </tbody>
             </table>
             <div class="btn-container">
-                <input type="submit" value="Add" class="btn btn-primary">
+                <input type="submit" value="Add Jetpack Product" class="btn btn-primary">
             </div>
         </form>
         <hr>
@@ -180,13 +186,9 @@ class AdminViews {
         <form action="{$this->module_link}&action=updateAPIToken" method="post">
             <table class="form" width="100%" border="0" cellspacing="2" cellpadding="3">
                 <tbody>
-                    <tr>
-                        <td class="fieldlabel">
-                            API TOken </td>
-                        <td class="fieldarea">
-                            <input type="text" class="form-control input-500" name="api_token" value="{$this->partner_api_token}">
-                        </td>
-                    </tr>
+                <tr>
+                <td class="fieldlabel">API Token</td>
+                <td class="fieldarea"><input type="text" name="api_token" value="{$this->partner_api_token}" class="form-control input-inline input-500"> Your partner API token for the Jetpack licensing API.</td>
                 </tbody>
             </table>
             <div class="btn-container">

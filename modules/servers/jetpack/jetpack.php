@@ -1,15 +1,15 @@
 <?php
 
+if (!defined("WHMCS")) {
+    die("This file cannot be accessed directly");
+}
+
 use Jetpack\JetpackLicenseAPIManager;
 use Jetpack\JetpackLicenseManager;
 use WHMCS\Database\Capsule;
 
 
 include_once(__DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
-
-if (!defined("WHMCS")) {
-    die("This file cannot be accessed directly");
-}
 
 const ERROR_PREFIX = 'JETPACK_PROVISIONING_MODULE_ERROR:';
 
@@ -44,7 +44,7 @@ function jetpack_MetaData()
  */
 function jetpack_ConfigOptions()
 {
-    if ( Capsule::schema()->hasTable('jetpack_product_licenses')) {
+    if (Capsule::schema()->hasTable('jetpack_product_licenses')) {
         $licensing_table = [];
     } else {
         $licensing_table = [
