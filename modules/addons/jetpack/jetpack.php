@@ -1,25 +1,21 @@
 <?php
-/**
- * An addon module that automatically adds a jetpack product to a hosts whmcs available products in
- * a product group.
- */
+
+if (!defined('WHMCS')) {
+    die('This file cannot be accessed directly');
+}
 
 include_once(__DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
 use WHMCS\Database\Capsule;
 use Jetpack\AdminDispatcher;
 
-
-if ( ! defined( 'WHMCS' ) ) {
-    die( 'This file cannot be accessed directly' );
-}
-
 /**
  * Configuration options for Jetpack Addon Module.
  *
  * @return array Configuration Options for Jetpack Addon Module
  */
-function jetpack_config() {
+function jetpack_config()
+{
     return [
         'name'        => 'Jetpack Addon',
         'author'      => 'Automattic',
@@ -45,20 +41,28 @@ function jetpack_config() {
  *
  * @return void
  */
-function jetpack_activate() {
-    if (! Capsule::schema()->hasTable( 'jetpack_product_licenses' ) ) {
-        Capsule::schema()->create(
-            'jetpack_product_licenses',
-            function ($table) {
-                /** @var \Illuminate\Database\Schema\Blueprint $table */
-                $table->increments('id');
-                $table->integer('order_id');
-                $table->integer('product_id');
-                $table->string('license_key');
-                $table->timestamp('issued_at');
-                $table->timestamp('revoked_at')->nullable();
-            }
-        );
+function jetpack_activate()
+{
+    if (!Capsule::schema()->hasTable('jetpack_product_licenses')) {
+        try {
+            Capsule::schema()->create(
+                'jetpack_product_licenses',
+                function ($table) {
+                    /** @var \Illuminate\Database\Schema\Blueprint $table */
+                    $table->increments('id');
+                    $table->integer('order_id');
+                    $table->integer('product_id');
+                    $table->string('license_key');
+                    $table->timestamp('issued_at');
+                    $table->timestamp('revoked_at')->nullable();
+                }
+            );
+        } catch (Exception $e) {
+            return [
+                'status' => "error",
+                'description' => 'Unable to create Jetpack Product Group: ' . $e->getMessage(),
+            ];
+        }
     }
 
     $jetpack_product_group = Capsule::table('tblproductgroups')->where(['name' => 'Jetpack','slug' => 'jetpack'])->first();
@@ -81,6 +85,7 @@ function jetpack_activate() {
             ];
         }
     }
+    return true;
 }
 
 
@@ -89,7 +94,8 @@ function jetpack_activate() {
  *
  * @return void
  */
-function jetpack_deactivate() {
+function jetpack_deactivate()
+{
 }
 
 /**

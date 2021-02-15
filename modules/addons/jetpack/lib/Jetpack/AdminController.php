@@ -41,14 +41,14 @@ class AdminController
             Capsule::table('tbladdonmodules')->where(['module' => 'jetpack', 'setting' => 'api_token'])
                 ->update(['value' => $_POST['api_token']]);
         } catch (Exception $e) {
-            $message = $views->make_action_message(
+            $message = $views->makeActionMessage(
                 'error',
                 'API Token Update',
                 'Unable to Update API Token ' . $e->getMessage()
             );
             return $message . $views->index();
         }
-        $message = $views->make_action_message(
+        $message = $views->makeActionMessage(
             'success',
             'API Token Update',
             'API Token Successfully Updated'
@@ -66,25 +66,24 @@ class AdminController
      */
     public function addProduct($params)
     {
-        $product_group = Capsule::table('tblproductgroups')->where(['name' => 'Jetpack', 'slug' => 'jetpack'])->first();
         $product_name = $this->formatProductName($_POST['jetpack_product']);
         $jetpack_product = $_POST['jetpack_product'];
         $create_status = false;
         if ($_POST['product_type'] === 'product') {
-            $create_status = $this->createWHMCSProduct($product_group->id, $product_name, $params['api_token'], $jetpack_product);
+            $create_status = $this->createWHMCSProduct($product_name, $params['api_token'], $jetpack_product);
         } elseif ($_POST['product_type'] === 'product_addon') {
             $create_status = $this->createWHMCSProductAddon($product_name, $params['api_token'], $jetpack_product);
         }
 
         $views   = new AdminViews($params);
         if ($create_status === true) {
-            $message = $views->make_action_message(
+            $message = $views->makeActionMessage(
                 'success',
                 'Product Created',
                 'The Jetpack product has been created and can be reviewed below.'
             );
         } else {
-            $message = $views->make_action_message(
+            $message = $views->makeActionMessage(
                 'error',
                 'Product Not Created',
                 'The Jetpack product was unable to be created. Please review the logs for details.'
@@ -96,18 +95,22 @@ class AdminController
     /**
      * Create a WHMCS product for a Jetpack Product
      *
-     * @param string $product_group_id The product group id for the product
      * @param string $product_name The product name
      * @param string $config1 The Partner API token.
      * @param string $config2 The Jetpack product identifier.
      * @return bool
      */
-    public function createWHMCSProduct($product_group_id, $product_name, $config1, $config2)
+    public function createWHMCSProduct($product_name, $config1, $config2)
     {
+        jetpack_activate();
+        $product_group = Capsule::table('tblproductgroups')->where(['name' => 'Jetpack', 'slug' => 'jetpack'])->first();
+        if (!$product_group) {
+            return false;
+        }
         try {
             Capsule::table('tblproducts')->insert(
                 [
-                    'gid' => $product_group_id,
+                    'gid' => $product_group->id,
                     'name' => $product_name,
                     'type' => 'other',
                     'servertype' => 'jetpack',
