@@ -85,7 +85,6 @@ function jetpack_activate()
             ];
         }
     }
-    return true;
 }
 
 
