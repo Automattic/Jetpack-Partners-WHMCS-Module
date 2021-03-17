@@ -96,18 +96,24 @@ class AdminViews {
     {
         $products = Capsule::table('tblproducts')->where('servertype', 'jetpack')->select(['id','name'])->get();
         $product_addons = Capsule::table('tbladdons')->where('module', 'jetpack')->select(['id','name'])->get();
+
+        if (is_a($products, 'Illuminate\Database\Eloquent\Collection')) {
+            $products = $products->toArray();
+            $product_addons = $product_addons->toArray();
+        }
+
         $table_row_products = '';
         $table_row_product_addons = '';
 
-        if ($products->isEmpty() && $product_addons->isEmpty()) {
+        if (empty($products) && empty($product_addons)) {
             $table_row_products = '<tr><td colspan ="3"; style="text-align: center";> No Jetpack products or product addons found. Add some below.</td></tr>';
         }
-        if (!$products->isEmpty()) {
+        if (!empty($products)) {
             foreach ($products as $product) {
                 $table_row_products .= "<tr><td><a href=configproducts.php?action=edit&id=$product->id>$product->name</a></td><td>Product</td></tr>";
             }
         }
-        if (!$product_addons->isEmpty()) {
+        if (!empty($product_addons)) {
             foreach ($product_addons as $product_addon) {
                 $table_row_products .= "<tr><td><a href=configaddons.php?action=manage&id=$product_addon->id>$product_addon->name</a></td><td>Product Addon</td></tr>";
             }

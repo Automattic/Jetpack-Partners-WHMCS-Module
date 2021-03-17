@@ -103,7 +103,7 @@ class AdminController
     public function createWHMCSProduct($product_name, $config1, $config2)
     {
         jetpack_activate();
-        $product_group = Capsule::table('tblproductgroups')->where(['name' => 'Jetpack', 'slug' => 'jetpack'])->first();
+        $product_group = Capsule::table('tblproductgroups')->where(['name' => 'Jetpack'])->first();
         if (!$product_group) {
             return false;
         }

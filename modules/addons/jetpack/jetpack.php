@@ -65,13 +65,12 @@ function jetpack_activate()
         }
     }
 
-    $jetpack_product_group = Capsule::table('tblproductgroups')->where(['name' => 'Jetpack','slug' => 'jetpack'])->first();
+    $jetpack_product_group = Capsule::table('tblproductgroups')->where(['name' => 'Jetpack'])->first();
     if (is_null($jetpack_product_group)) {
         try {
             Capsule::table('tblproductgroups')->insert(
                 [
                     'name' => 'Jetpack',
-                    'slug' => 'jetpack',
                     'headline' => 'Jetpack Products',
                     'hidden' => 1,
                     'created_at' => date('Y-m-d H:i:s'),
