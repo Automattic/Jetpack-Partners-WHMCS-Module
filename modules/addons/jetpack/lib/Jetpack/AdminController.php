@@ -58,7 +58,7 @@ class AdminController
     }
 
     /**
-     * Add a Jetpack Product with required configurations fields to a hosting partners whmcs product
+     * Add a Jetpack Product with required configurations fields to a hosting partners WHMCS product
      * list.
      *
      * @param array $params Module configuration parameters.
@@ -176,7 +176,7 @@ class AdminController
     }
 
     /**
-     * Format product name to remove undersocres and capitalize.
+     * Format product name to remove underscores and capitalize.
      *
      * @param string $product_name
      * @return string Formatted product name string.

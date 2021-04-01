@@ -5,7 +5,7 @@ namespace Jetpack;
 use WHMCS\Database\Capsule;
 
 /**
- * Maintains functions used to create views for the whmcs addon module.
+ * Maintains functions used to create views for the WHMCS addon module.
  */
 class AdminViews {
 
@@ -35,13 +35,12 @@ class AdminViews {
     public $partner_api_token;
 
     /**
-     *
-     * @param array $params whmcs module parameters.
+     * @param array $params WHMCS module parameters.
      */
     public function __construct($params)
     {
-        $this->module_link    = $params['modulelink'];
-        $this->partner_api_token     = $params['api_token'];
+        $this->module_link = $params['modulelink'];
+        $this->partner_api_token = $params['api_token'];
     }
 
     public function index()
@@ -86,7 +85,7 @@ class AdminViews {
                     <div class="{$type_div[$type]}"><strong>
                         <span class="title">{$title}!</span>
                     </strong><br>{$message}</div>
-        HTML;
+HTML;
     }
 
     /**
@@ -134,7 +133,7 @@ class AdminViews {
         </table>
         <br>
         <hr>
-        HTML;
+HTML;
     }
 
     /**
@@ -175,7 +174,7 @@ class AdminViews {
             </div>
         </form>
         <hr>
-        HTML;
+HTML;
     }
 
     /**
@@ -202,6 +201,6 @@ class AdminViews {
             </div>
         </form>
         <hr>
-        HTML;
+HTML;
     }
 }

@@ -38,7 +38,6 @@ function jetpack_config()
  * Activation Options. Creates a table to store licenses if it doesn't already exist and create
  * the Jetpack Product group also if it does not already exist.
  *
- *
  * @return void
  */
 function jetpack_activate()
