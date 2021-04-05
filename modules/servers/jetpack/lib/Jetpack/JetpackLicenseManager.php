@@ -7,42 +7,42 @@ use WHMCS\Database\Capsule;
 class JetpackLicenseManager
 {
     /**
-     * Save a new License for a product prov isioned through the Jetpack Licensing API on a WHMCS order
+     * Save a new License for a product provisioned through the Jetpack Licensing API on a WHMCS order
      *
      * @param integer $order_id THe WHMCS order id.
      * @param integer $product_id The WHMCS product id.
      * @param string $license_key The Jetpack product license.
-     * @param string $licnese_issued_at The date the license was issued at supplied by the Jetpack Licensing API.
+     * @param string $license_issued_at The date the license was issued at supplied by the Jetpack Licensing API.
      * @return void
      */
-    public function saveLicense(int $order_id, int $product_id, string $license_key, string $licnese_issued_at)
+    public function saveLicense(int $order_id, int $product_id, string $license_key, string $license_issued_at)
     {
         Capsule::table('jetpack_product_licenses')->insert(
             [
                 'order_id' => $order_id,
                 'product_id' => $product_id,
                 'license_key' => $license_key,
-                'issued_at' => $licnese_issued_at,
+                'issued_at' => $license_issued_at,
             ]
         );
     }
 
     /**
      * Update a license record with a revoked at time provided by the Jetpack licensing API when
-     * a license i reovked
+     * a license is revoked
      *
-     * @param string $licnese_id The license id to update
+     * @param string $license_id The license id to update
      * @param string $revoked_at The time supplied by the API when the license was revoked
      * @return void
      */
-    public function revokeLicense(string $licnese_id, string $revoked_at) {
+    public function revokeLicense(string $license_id, string $revoked_at) {
         Capsule::table('jetpack_product_licenses')
-        ->where([ 'id' => $licnese_id])
+        ->where([ 'id' => $license_id])
         ->update(['revoked_at' => $revoked_at]);
     }
 
     /**
-     * Find an active licnese for a WHMCS order for a jetpack prdouct
+     * Find an active license for a WHMCS order for a Jetpack product
      *
      * @param array WHMCS $params
      * @return StdObject
@@ -61,9 +61,9 @@ class JetpackLicenseManager
     }
 
     /**
-     * Get the license key for an active license for a jetpack product
+     * Get the license key for an active license for a Jetpack product
      *
-     * @return stirng The license key or "No License Key Found"
+     * @return string The license key or "No License Key Found"
      */
     public function getLicenseKey(int $order_id, int $product_id)
     {

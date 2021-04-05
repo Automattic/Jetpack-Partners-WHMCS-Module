@@ -86,7 +86,7 @@ class JetpackLicenseAPIManager
     }
 
     /**
-     * Revoke a liencse for a Jetpack Product
+     * Revoke a license for a Jetpack Product
      *
      * @param string $license license key
      * @return Response
@@ -100,14 +100,14 @@ class JetpackLicenseAPIManager
     }
 
     /**
-     * Revoke a liencse for a Jetpack Product
+     * Revoke a license for a Jetpack Product
      *
      * @param string $license license key
      * @return Response
      */
     public function getJetpackProducts() {
         $response = $this->client->get(
-            self::PRODUCTS_API_URI,
+            self::PRODUCTS_API_URI
         );
         return $response;
     }
